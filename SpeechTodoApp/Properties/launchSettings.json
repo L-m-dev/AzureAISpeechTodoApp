@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "SpeechTodoApp": {
+      "commandName": "Project",
+      "workingDirectory": "C:\\Users\\Immortal\\source\\repos\\SpeechTodoApp"
+    }
+  }
+}
