@@ -11,12 +11,6 @@ using var log = new LoggerConfiguration()
 VoiceService vs = new VoiceService();
 DatabaseLayer.DatabaseLayer db = new DatabaseLayer.DatabaseLayer();
 
-
-
-
-//await vs.GetSpeechResult();
-//var taskt = await BuildTask();
-
 while (true)
 {
     Console.WriteLine("Things that I have to do!");
@@ -75,6 +69,109 @@ while (true)
                 Console.WriteLine(task.ToString());
             }
             break;
+        case 3:
+            taskList = await db.GetAll();
+            foreach (var task in taskList)
+            {
+                Console.WriteLine(task.ToString());
+            }
+            Console.WriteLine("Which task you want to edit? Type the number:");
+            int indexChoice = 0;
+            while(!Int32.TryParse(Console.ReadLine(), out indexChoice)){
+                Console.WriteLine("Invalid Choice. Try Again.");
+            }
+
+            Console.WriteLine("Ok, tell me the new activity and/or date");
+            validObject = false;
+            while (validObject == false)
+            {
+                try
+                {
+                    TodoTask t = await BuildTask(indexChoice);
+                    validObject = true;
+                    log.Information($"Adding object {t.ToString()} ");
+                    var updateSuccess = await db.UpdateTodoTask(t);
+                    if (updateSuccess)
+                    {
+                        log.Information("Success in updating.");
+                    }
+                    else
+                    {
+                        log.Information("Error in updating record.");
+                    }
+                    break;
+                }
+                catch (ArgumentException ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    Console.WriteLine("Error recognizing speech. Try again.");
+                    validObject = false;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    Console.WriteLine("Error recognizing speech. Try again.");
+                    validObject = false;
+                }
+
+            }
+
+            break;
+            case 4:
+            taskList = await db.GetAll();
+            foreach (var task in taskList)
+            {
+                Console.WriteLine(task.ToString());
+            }
+            Console.WriteLine("Which task to delete? Type in the index");
+            indexChoice = 0;
+            while (!Int32.TryParse(Console.ReadLine(), out indexChoice))
+            {
+                Console.WriteLine("Invalid Choice. Try Again.");
+            }
+            TodoTask deleteTaskED = new TodoTask("none", null, indexChoice);
+            var success = await db.DeleteTodoTask(deleteTaskED);
+            if (success)
+            {
+                log.Information("Success in deletion.");
+            }
+            else
+            {
+                log.Information("Error deleting task.");
+            }
+            break;
+            case 5:
+            Console.WriteLine("We will delete everything. Are you sure? Y/N");
+            bool validChoice = false;
+            string strChoice = "";
+            while (!validChoice && string.IsNullOrWhiteSpace(strChoice))
+            {
+
+                strChoice = Console.ReadLine().Trim().ToUpper();
+                if (strChoice.Equals("Y") || strChoice.Equals("N")){
+                    validChoice = true;
+                    break;
+                }
+                Console.WriteLine("Wrong choice. Try again. Y for Yes, N for No.");
+            }
+
+            if (strChoice.Equals("Y"))
+            {
+                success = await db.DeleteAllTask();
+                if (success)
+                {
+                    log.Information("Success in deleting ALL tasks");
+                }
+                else
+                {
+                    log.Information("Failure in deleting ALL tasks.");
+                }
+            }
+            break;
+        default: break;
+
+
+
     }
 
     if (exit)
@@ -85,16 +182,26 @@ while (true)
 }
 
 
-async Task<TodoTask> BuildTask()
+async Task<TodoTask> BuildTask(int id = 0)
 {
     var speechRecognitionRes = await vs.GetSpeechResult();
     string speechText = speechRecognitionRes.Text;
     var speechTextAnalysisDateTime = await vs.GetTextAnalysis(speechText);
 
     DateTime date = GetDateTime(speechText);
-    TodoTask tdTask = new TodoTask(speechText, date);
+    if (id == 0)
+    {
+        TodoTask tdTask = new TodoTask(speechText, date);       
+        return tdTask;
 
-    return tdTask;
+    }
+    else
+    {
+        TodoTask tdTask = new TodoTask(speechText, date, id);
+        return tdTask;
+
+    }
+    throw new Exception("Error building task. BuildTask()");
 }
 
 
