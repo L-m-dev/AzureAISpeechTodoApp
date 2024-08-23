@@ -55,7 +55,7 @@ namespace SpeechTodoApp
 
             if (speechRecognitionResult.Reason == ResultReason.RecognizedSpeech)
             {
-                logService.Information(speechRecognitionResult.Text);
+                logService.Information($"User said: "+speechRecognitionResult.Text);
                 return speechRecognitionResult;
              }
             else

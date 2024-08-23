@@ -234,7 +234,6 @@ DateTime GetDateTime(string text)
 "29th", "30th", "31st" };
 
     var words = text.Split(new[] { ' ', '.', ',', '!', '?', ';', ':' });
-    log.Information(words.ToString());
 
     int day = 0;
     int month = 0;
