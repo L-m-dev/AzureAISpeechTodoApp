@@ -18,7 +18,7 @@ while (true)
     Console.WriteLine("2-View tasks");
     Console.WriteLine("3-Update task");
     Console.WriteLine("4-Delete task");
-    Console.WriteLine("5-Delete ALL task");
+    Console.WriteLine("5-Delete ALL tasks");
     Console.WriteLine("0- Exit");
 
     int choice = 0;
@@ -35,7 +35,8 @@ while (true)
             exit = true;
             break;
         case 1:
-            Console.WriteLine("Please say aloud the Activity and the Date! Example: Gym on August 24th");
+            Console.WriteLine("Please say aloud the Activity and the Date! Example: Gym on August 24th. Say 'cancel' to cancel the operation and go back");
+            
             bool validObject = false;
             while (validObject == false)
             {
@@ -45,6 +46,11 @@ while (true)
                     validObject = true;
                     log.Information($"Adding object {t.ToString()} ");
                     await db.InsertTodoTask(t);
+                    break;
+                }
+                catch(OperationCanceledException ex)
+                {
+                    Console.WriteLine("Operation Cancelled");
                     break;
                 }
                 catch (ArgumentException ex)
@@ -75,13 +81,13 @@ while (true)
             {
                 Console.WriteLine(task.ToString());
             }
-            Console.WriteLine("Which task you want to edit? Type the number:");
+            Console.WriteLine("Which task you want to edit? Type the Id number:");
             int indexChoice = 0;
             while(!Int32.TryParse(Console.ReadLine(), out indexChoice)){
                 Console.WriteLine("Invalid Choice. Try Again.");
             }
 
-            Console.WriteLine("Ok, tell me the new activity and/or date");
+            Console.WriteLine("Ok, tell me the new activity and/or date. Say 'cancel' to go back.");
             validObject = false;
             while (validObject == false)
             {
@@ -99,6 +105,11 @@ while (true)
                     {
                         log.Information("Error in updating record.");
                     }
+                    break;
+                }
+                catch(OperationCanceledException ex)
+                {
+                    Console.WriteLine("Operation Cancelled.");
                     break;
                 }
                 catch (ArgumentException ex)
@@ -123,7 +134,7 @@ while (true)
             {
                 Console.WriteLine(task.ToString());
             }
-            Console.WriteLine("Which task to delete? Type in the index");
+            Console.WriteLine("Which task to delete? Type the Id.");
             indexChoice = 0;
             while (!Int32.TryParse(Console.ReadLine(), out indexChoice))
             {
@@ -186,6 +197,11 @@ async Task<TodoTask> BuildTask(int id = 0)
 {
     var speechRecognitionRes = await vs.GetSpeechResult();
     string speechText = speechRecognitionRes.Text;
+   //if contains Cancel, should stop the current process. 
+    if(speechText.Length<9 && speechText.ToLower().Trim().Contains("cancel"))
+    {
+        throw new OperationCanceledException();
+    }
     var speechTextAnalysisDateTime = await vs.GetTextAnalysis(speechText);
 
     DateTime date = GetDateTime(speechText);
